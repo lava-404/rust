@@ -1,38 +1,79 @@
-pub trait Messenger {
-    fn send(&self, msg: &str);
+struct Node {
+    value: i32,
+    next: Option<Box<Node>>
 }
 
-pub struct LimitTracker<'a, T: Messenger> {
-    messenger: &'a T,
-    value: usize,
-    max: usize,
+struct LinkedList {
+    head: Option<Box<Node>>
 }
 
-impl<'a, T> LimitTracker<'a, T>
-where
-    T: Messenger,
-{
-    pub fn new(messenger: &'a T, max: usize) -> LimitTracker<'a, T> {
-        LimitTracker {
-            messenger,
-            value: 0,
-            max,
+
+impl LinkedList{
+    fn new() -> Self {
+       
+        LinkedList { head:  None}
+    }
+
+    fn add(&mut self, val: i32){
+        if !self.head.is_some(){
+            self.head = Some(Box::new(Node {
+                value: val,
+                next: None
+
+            }));
+        return;
+        }
+
+        let mut current = self.head.as_mut();
+        while let Some(node) = current {
+            if node.next.is_none() {
+                node.next = Some(Box::new(Node { value: val, next: None }))
+                break;
+            }
+            else{
+                current = node.next.as_mut();
+            }
+        }
+    }
+    fn get_last_node(&mut self)-> Option<&mut Box<Node>>{
+        let mut current = self.head.as_mut();
+        let mut last_node = None;
+        while let Some(node) = current {
+            if node.next.is_none(){
+                last_node = Some(node);
+                break;
+            }
+            else{
+                current = node.next.as_mut();
+            }
+        }
+        last_node
+    }
+
+    fn remove(&mut self){
+        if self.head.is_none() {
+            return;
+        }
+    
+        // single-node list
+        if self.head.as_ref().unwrap().next.is_none() {
+            self.head = None;
+            return;
+        }
+    
+        let mut current = self.head.as_mut();
+    
+        while let Some(node) = current {
+    
+            // if next node is the LAST node
+            if node.next.as_ref().unwrap().next.is_none() {
+                node.next = None;
+                break;
+            }
+    
+            current = node.next.as_mut();
         }
     }
 
-    pub fn set_value(&mut self, value: usize) {
-        self.value = value;
-
-        let percentage_of_max = self.value as f64 / self.max as f64;
-
-        if percentage_of_max >= 1.0 {
-            self.messenger.send("Error: You are over your quota!");
-        } else if percentage_of_max >= 0.9 {
-            self.messenger
-                .send("Urgent warning: You've used up over 90% of your quota!");
-        } else if percentage_of_max >= 0.75 {
-            self.messenger
-                .send("Warning: You've used up over 75% of your quota!");
-        }
-    }
 }
+
